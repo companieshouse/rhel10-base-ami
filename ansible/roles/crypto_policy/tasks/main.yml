@@ -1,0 +1,14 @@
+---
+- name: XCCDF Value var_system_crypto_policy
+  set_fact:
+    var_system_crypto_policy: !!str DEFAULT:NO-SHA1
+
+- name: Configure System Cryptography Policy
+  lineinfile:
+    path: /etc/crypto-policies/config
+    regexp: ^(?!#)(\S+)$
+    line: "{{ var_system_crypto_policy }}"
+    create: true
+
+- name: Verify that Crypto Policy is Set (runtime)
+  command: /usr/bin/update-crypto-policies --set {{ var_system_crypto_policy }}

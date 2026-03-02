@@ -1,0 +1,44 @@
+---
+- name: Gather the package facts
+  package_facts:
+    manager: auto
+
+- name: Configure AIDE to Verify the Audit Tools - Gather List of Packages
+  ansible.builtin.package_facts:
+    manager: auto
+  when: '"kernel" in ansible_facts.packages'
+
+- name: Ensure aide is installed
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - aide
+  when: '"kernel" in ansible_facts.packages'
+
+- name: Set audit_tools fact
+  set_fact:
+    audit_tools:
+      - /usr/sbin/auditctl
+      - /usr/sbin/auditd
+      - /usr/sbin/augenrules
+      - /usr/sbin/aureport
+      - /usr/sbin/ausearch
+      - /usr/sbin/autrace
+      - /usr/sbin/rsyslogd
+  when: '"kernel" in ansible_facts.packages'
+
+- name: Ensure existing AIDE configuration for audit tools are correct
+  lineinfile:
+    path: /etc/aide.conf
+    regexp: ^{{ item }}\s
+    line: "{{ item }} p+i+n+u+g+s+b+acl+xattrs+sha512"
+  with_items: "{{ audit_tools }}"
+  when: '"kernel" in ansible_facts.packages'
+
+- name: Configure AIDE to properly protect audit tools
+  lineinfile:
+    path: /etc/aide.conf
+    line: "{{ item }} p+i+n+u+g+s+b+acl+xattrs+sha512"
+  with_items: "{{ audit_tools }}"
+  when: '"kernel" in ansible_facts.packages'

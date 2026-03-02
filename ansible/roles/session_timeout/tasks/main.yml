@@ -1,0 +1,25 @@
+---
+- name: Gather the package facts
+  package_facts:
+    manager: auto
+
+- name: XCCDF Value var_accounts_tmout # promote to variable
+  set_fact:
+    var_accounts_tmout: !!str 900
+
+- name: Correct any occurrence of TMOUT in /etc/profile
+  replace:
+    path: /etc/profile
+    regexp: ^[^#].*TMOUT=.*
+    replace: typeset -xr TMOUT={{ var_accounts_tmout }}
+  register: profile_replaced
+  when: '"kernel" in ansible_facts.packages'
+
+- name: Set Interactive Session Timeout
+  lineinfile:
+    path: /etc/profile.d/tmout.sh
+    create: true
+    regexp: TMOUT=
+    line: typeset -xr TMOUT={{ var_accounts_tmout }}
+    state: present
+  when: '"kernel" in ansible_facts.packages'

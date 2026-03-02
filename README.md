@@ -1,4 +1,4 @@
-# ami-repository-template
+# rhel10-base-ami
 
 Provides a base template for Packer and Ansible based AMI builds.
 The template Packer code is designed for Packer >= 1.8 and Ansible >= 2.10

@@ -1,0 +1,100 @@
+---
+## Ensure journald is configured to compress large log files
+- name: Gather the package facts
+  package_facts:
+    manager: auto
+
+- name: Ensure journald is configured to compress large log files - Search for a section in files
+  ansible.builtin.find:
+    paths: "{{item.path}}"
+    patterns: "{{item.pattern}}"
+    contains: ^\s*\[Journal\]
+    use_regex: true
+  register: systemd_dropin_files_with_section
+  loop:
+    - path: "{{ '/etc/systemd/journald.conf' | dirname }}"
+      pattern: "{{ '/etc/systemd/journald.conf' | basename | regex_escape }}"
+    - path: /etc/systemd/journald.conf.d
+      pattern: .*\.conf
+  when: '"kernel" in ansible_facts.packages'
+
+- name: Ensure journald is configured to compress large log files - Count number of files which contain the correct section
+  ansible.builtin.set_fact:
+    count_of_systemd_dropin_files_with_section: "{{systemd_dropin_files_with_section.results | map(attribute='matched') | list | map('int') | sum}}"
+  when: '"kernel" in ansible_facts.packages'
+
+- name: Ensure journald is configured to compress large log files - Add missing configuration to correct section
+  ini_file:
+    path: "{{item}}"
+    section: Journal
+    option: Compress
+    value: "yes"
+    state: present
+    no_extra_spaces: true
+  when:
+    - '"kernel" in ansible_facts.packages'
+    - count_of_systemd_dropin_files_with_section | int > 0
+  loop: "{{systemd_dropin_files_with_section.results | sum(attribute='files', start=[]) | map(attribute='path') | list }}"
+
+- name: Ensure journald is configured to compress large log files - Add configuration to new remediation file
+  ini_file:
+    path: /etc/systemd/journald.conf.d/complianceascode_hardening.conf
+    section: Journal
+    option: Compress
+    value: "yes"
+    state: present
+    no_extra_spaces: true
+    create: true
+  when:
+    - '"kernel" in ansible_facts.packages'
+    - count_of_systemd_dropin_files_with_section | int == 0
+
+## Ensure journald is configured to write log files to persistent disk
+- name: Gather the package facts
+  package_facts:
+    manager: auto
+
+- name: Ensure journald is configured to write log files to persistent disk - Search for a section in files
+  ansible.builtin.find:
+    paths: "{{item.path}}"
+    patterns: "{{item.pattern}}"
+    contains: ^\s*\[Journal\]
+    use_regex: true
+  register: systemd_dropin_files_with_section
+  loop:
+    - path: "{{ '/etc/systemd/journald.conf' | dirname }}"
+      pattern: "{{ '/etc/systemd/journald.conf' | basename | regex_escape }}"
+    - path: /etc/systemd/journald.conf.d
+      pattern: .*\.conf
+  when: '"kernel" in ansible_facts.packages'
+
+- name: Ensure journald is configured to write log files to persistent disk - Count number of files which contain the correct section
+  ansible.builtin.set_fact:
+    count_of_systemd_dropin_files_with_section: "{{systemd_dropin_files_with_section.results | map(attribute='matched') | list | map('int') | sum}}"
+  when: '"kernel" in ansible_facts.packages'
+
+- name: Ensure journald is configured to write log files to persistent disk - Add missing configuration to correct section
+  ini_file:
+    path: "{{item}}"
+    section: Journal
+    option: Storage
+    value: persistent
+    state: present
+    no_extra_spaces: true
+  when:
+    - '"kernel" in ansible_facts.packages'
+    - count_of_systemd_dropin_files_with_section | int > 0
+  loop: "{{systemd_dropin_files_with_section.results | sum(attribute='files', start=[]) | map(attribute='path') | list }}"
+
+- name: Ensure journald is configured to write log files to persistent disk - Add configuration to new remediation file
+  ini_file:
+    path: /etc/systemd/journald.conf.d/complianceascode_hardening.conf
+    section: Journal
+    option: Storage
+    value: persistent
+    state: present
+    no_extra_spaces: true
+    create: true
+  when:
+    - '"kernel" in ansible_facts.packages'
+    - count_of_systemd_dropin_files_with_section | int == 0

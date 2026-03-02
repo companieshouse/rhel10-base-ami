@@ -1,0 +1,195 @@
+---
+### Ensure PAM Enforces Password Requirements ###
+
+## Prevent the Use of Dictionary Words
+- name: Gather the package facts
+  package_facts:
+    manager: auto
+
+- name: XCCDF Value var_password_pam_dictcheck # promote to variable
+  set_fact:
+    var_password_pam_dictcheck: !!str 1
+
+- name:
+    Ensure PAM Enforces Password Requirements - Prevent the Use of Dictionary
+    Words - Ensure PAM variable dictcheck is set accordingly
+  ansible.builtin.lineinfile:
+    create: true
+    dest: /etc/security/pwquality.conf
+    regexp: ^#?\s*dictcheck
+    line: dictcheck = {{ var_password_pam_dictcheck }}
+  when: '"pam" in ansible_facts.packages'
+
+## Minimum Different Characters
+- name: Gather the package facts
+  package_facts:
+    manager: auto
+
+- name: XCCDF Value var_password_pam_difok # promote to variable
+  set_fact:
+    var_password_pam_difok: !!str 2
+
+- name:
+    Ensure PAM Enforces Password Requirements - Minimum Different Characters -
+    Ensure PAM variable difok is set accordingly
+  ansible.builtin.lineinfile:
+    create: true
+    dest: /etc/security/pwquality.conf
+    regexp: ^#?\s*difok
+    line: difok = {{ var_password_pam_difok }}
+  when: '"pam" in ansible_facts.packages'
+
+## Enforce for root User
+- name: Gather the package facts
+  package_facts:
+    manager: auto
+
+- name: Ensure PAM Enforces Password Requirements - Enforce for root User
+  lineinfile:
+    path: /etc/security/pwquality.conf
+    create: true
+    regexp: "^enforce_for_root"
+    line: enforce_for_root
+    state: present
+  when: '"pam" in ansible_facts.packages'
+
+## Minimum Different Categories
+- name: Gather the package facts
+  package_facts:
+    manager: auto
+
+- name: XCCDF Value var_password_pam_minclass # promote to variable
+  set_fact:
+    var_password_pam_minclass: !!str 4
+
+- name:
+    Ensure PAM Enforces Password Requirements - Minimum Different Categories -
+    Ensure PAM variable minclass is set accordingly
+  ansible.builtin.lineinfile:
+    create: true
+    dest: /etc/security/pwquality.conf
+    regexp: ^#?\s*minclass
+    line: minclass = {{ var_password_pam_minclass }}
+  when: '"pam" in ansible_facts.packages'
+
+## Ensure the Group Used by pam_wheel.so Module Exists on System and is Empty
+- name: Gather the package facts
+  package_facts:
+    manager: auto
+- name: XCCDF Value var_pam_wheel_group_for_su # promote to variable
+  set_fact:
+    var_pam_wheel_group_for_su: !!str sugroup
+
+- name:
+    Ensure the Group Used by pam_wheel.so Module Exists on System and is Empty
+    - Ensure {{ var_pam_wheel_group_for_su }} Group Exists
+  ansible.builtin.group:
+    name: "{{ var_pam_wheel_group_for_su }}"
+    state: present
+  when: '"pam" in ansible_facts.packages'
+
+- name:
+    Ensure the Group Used by pam_wheel.so Module Exists on System and is Empty
+    - Ensure {{ var_pam_wheel_group_for_su }} Group is Empty
+  ansible.builtin.lineinfile:
+    path: /etc/group
+    regexp: ^({{ var_pam_wheel_group_for_su }}:[^:]+:[0-9]+:).*$
+    line: \1
+    backrefs: true
+  when: '"pam" in ansible_facts.packages'
+
+#Enforce Usage of pam_wheel with Group Parameter for su Authentication
+- name: Gather the package facts
+  package_facts:
+    manager: auto
+- name: XCCDF Value var_pam_wheel_group_for_su # promote to variable
+  set_fact:
+    var_pam_wheel_group_for_su: !!str sugroup
+
+- name:
+    Enforce Usage of pam_wheel with Group Parameter for su Authentication - Add
+    the group to the /etc/pam.d/su file
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/su
+    state: present
+    regexp: ^[\s]*#[\s]*auth[\s]+required[\s]+pam_wheel\.so[\s]+use_uid group=$
+    line:
+      auth             required        pam_wheel.so use_uid group={{ var_pam_wheel_group_for_su
+      }}
+  when: '"pam" in ansible_facts.packages'
+
+## Prevent Login to Accounts With Empty Password
+
+- name: Prevent Login to Accounts With Empty Password - Check if system relies on
+    authselect
+  ansible.builtin.stat:
+    path: /usr/bin/authselect
+  register: result_authselect_present
+  when: '"kernel" in ansible_facts.packages'
+
+- name: Prevent Login to Accounts With Empty Password - Remediate using authselect
+  block:
+
+  - name: Prevent Login to Accounts With Empty Password - Check integrity of authselect
+      current profile
+    ansible.builtin.command:
+      cmd: authselect check
+    register: result_authselect_check_cmd
+    changed_when: false
+    failed_when: false
+
+  - name: Prevent Login to Accounts With Empty Password - Informative message based
+      on the authselect integrity check result
+    ansible.builtin.assert:
+      that:
+      - result_authselect_check_cmd.rc == 0
+      fail_msg:
+      - authselect integrity check failed. Remediation aborted!
+      - This remediation could not be applied because an authselect profile was not
+        selected or the selected profile is not intact.
+      - It is not recommended to manually edit the PAM files when authselect tool
+        is available.
+      - In cases where the default authselect profile does not cover a specific demand,
+        a custom authselect profile is recommended.
+      success_msg:
+      - authselect integrity check passed
+
+  - name: Prevent Login to Accounts With Empty Password - Get authselect current features
+    ansible.builtin.shell:
+      cmd: authselect current | tail -n+3 | awk '{ print $2 }'
+    register: result_authselect_features
+    changed_when: false
+    when:
+    - result_authselect_check_cmd is success
+
+  - name: Prevent Login to Accounts With Empty Password - Ensure "without-nullok"
+      feature is enabled using authselect tool
+    ansible.builtin.command:
+      cmd: authselect enable-feature without-nullok
+    register: result_authselect_enable_feature_cmd
+    when:
+    - result_authselect_check_cmd is success
+    - result_authselect_features.stdout is not search("without-nullok")
+
+  - name: Prevent Login to Accounts With Empty Password - Ensure authselect changes
+      are applied
+    ansible.builtin.command:
+      cmd: authselect apply-changes -b
+    when:
+    - result_authselect_enable_feature_cmd is not skipped
+    - result_authselect_enable_feature_cmd is success
+  when:
+  - '"kernel" in ansible_facts.packages'
+  - result_authselect_present.stat.exists
+
+- name: Prevent Login to Accounts With Empty Password - Remediate directly editing
+    PAM files
+  ansible.builtin.replace:
+    dest: '{{ item }}'
+    regexp: nullok
+  loop:
+  - /etc/pam.d/system-auth
+  - /etc/pam.d/password-auth
+  when:
+  - '"kernel" in ansible_facts.packages'
+  - not result_authselect_present.stat.exists

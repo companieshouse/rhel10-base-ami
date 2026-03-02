@@ -1,0 +1,161 @@
+---
+## Verify nftables Service is Disabled
+- name: Gather the package facts
+  package_facts:
+    manager: auto
+
+- name:
+    Verify nftables Service is Disabled - Collect systemd Services Present in
+    the System
+  ansible.builtin.command: systemctl -q list-unit-files --type service
+  register: service_exists
+  changed_when: false
+  failed_when: service_exists.rc not in [0, 1]
+  check_mode: false
+  when:
+    ( "firewalld" in ansible_facts.packages and "nftables" in ansible_facts.packages
+    and "kernel" in ansible_facts.packages )
+
+- name: Verify nftables Service is Disabled - Ensure nftables.service is Masked
+  ansible.builtin.systemd:
+    name: nftables.service
+    state: stopped
+    enabled: false
+    masked: true
+  when:
+    - ( "firewalld" in ansible_facts.packages and "nftables" in ansible_facts.packages
+      and "kernel" in ansible_facts.packages )
+    - service_exists.stdout_lines is search("nftables.service", multiline=True)
+
+- name: Unit Socket Exists - nftables.socket
+  ansible.builtin.command: systemctl -q list-unit-files nftables.socket
+  register: socket_file_exists
+  changed_when: false
+  failed_when: socket_file_exists.rc not in [0, 1]
+  check_mode: false
+  when:
+    ( "firewalld" in ansible_facts.packages and "nftables" in ansible_facts.packages
+    and "kernel" in ansible_facts.packages )
+
+- name: Verify nftables Service is Disabled - Disable Socket nftables
+  ansible.builtin.systemd:
+    name: nftables.socket
+    enabled: false
+    state: stopped
+    masked: true
+  when:
+    - ( "firewalld" in ansible_facts.packages and "nftables" in ansible_facts.packages
+      and "kernel" in ansible_facts.packages )
+    - socket_file_exists.stdout_lines is search("nftables.socket", multiline=True)
+
+# Disable systemd-journal-remote Socket
+- name: Gather the package facts
+  package_facts:
+    manager: auto
+
+- name:
+    Disable systemd-journal-remote Socket - Collect systemd Socket Units Present
+    in the System
+  ansible.builtin.command:
+    cmd: systemctl -q list-unit-files --type socket
+  register: result_systemd_unit_files
+  changed_when: false
+  when: '"kernel" in ansible_facts.packages'
+
+- name:
+    Disable systemd-journal-remote Socket - Ensure systemd-journal-remote.socket
+    is Masked
+  ansible.builtin.systemd:
+    name: systemd-journal-remote.socket
+    state: stopped
+    enabled: false
+    masked: true
+  when:
+    - '"kernel" in ansible_facts.packages'
+    - result_systemd_unit_files.stdout_lines is search("systemd-journal-remote.socket")
+
+
+### If Firewalld is installed - Restrict loopback traffic ###
+
+- name: Gather the package facts
+  package_facts:
+    manager: auto
+
+- name:
+    Configure Firewalld to Restrict Loopback Traffic - Collect Facts About System
+    Services
+  ansible.builtin.service_facts: null
+  register: result_services_states
+  when: '"kernel" in ansible_facts.packages'
+
+- name:
+    Configure Firewalld to Restrict Loopback Traffic - Check if firewalld is installed
+  ansible.builtin.package_facts:
+    manager: auto
+  when: '"kernel" in ansible_facts.packages'
+
+- name:
+    Configure Firewalld to Restrict Loopback Traffic - Remediation is Applicable
+    if firewalld Service is Running
+  block:
+    - name:
+        Configure Firewalld to Restrict Loopback Traffic - Ensure firewalld trusted
+        Zone Restricts IPv4 Loopback Traffic
+      ansible.builtin.command:
+        cmd:
+          firewall-cmd --permanent --zone=trusted --add-rich-rule='rule family=ipv4
+          source address="127.0.0.1" destination not address="127.0.0.1" drop'
+      register: result_trusted_ipv4_restriction
+      changed_when:
+        - "'ALREADY_ENABLED' not in result_trusted_ipv4_restriction.stderr"
+
+    - name:
+        Configure Firewalld to Restrict Loopback Traffic - Ensure firewalld trusted
+        Zone Restricts IPv6 Loopback Traffic
+      ansible.builtin.command:
+        cmd:
+          firewall-cmd --permanent --zone=trusted --add-rich-rule='rule family=ipv6
+          source address="::1" destination not address="::1" drop'
+      register: result_trusted_ipv6_restriction
+      changed_when:
+        - "'ALREADY_ENABLED' not in result_trusted_ipv6_restriction.stderr"
+
+    - name:
+        Configure Firewalld to Restrict Loopback Traffic - Ensure firewalld Changes
+        are Applied
+      ansible.builtin.service:
+        name: firewalld
+        state: reloaded
+      when:
+        - result_trusted_ipv4_restriction is changed or result_trusted_ipv6_restriction
+          is changed
+  when:
+    - '"kernel" in ansible_facts.packages'
+    - '"firewalld" in ansible_facts.packages'
+    - 'ansible_facts.services["firewalld.service"] is defined'
+    - 'ansible_facts.services["firewalld.service"].state == "running"'
+
+- name:
+    Configure Firewalld to Restrict Loopback Traffic - Informative Message Based
+    on Service State
+  ansible.builtin.debug:
+    msg:
+      - "firewalld service is not active or not installed. Remediation skipped!"
+      - "This remediation could not be applied because it depends on firewalld service running."
+      - "The service is not started by this remediation in order to prevent connection issues."
+  when:
+    - '"kernel" in ansible_facts.packages'
+    - >
+      "firewalld" not in ansible_facts.packages or
+      ansible_facts.services["firewalld.service"] is not defined or
+      ansible_facts.services["firewalld.service"].state != "running"
+
+- name:
+    Configure Firewalld to Restrict Loopback Traffic - Success Message
+  ansible.builtin.debug:
+    msg: "Configure Firewalld to Restrict Loopback Traffic remediation successfully executed"
+  when:
+    - '"kernel" in ansible_facts.packages'
+    - '"firewalld" in ansible_facts.packages'
+    - 'ansible_facts.services["firewalld.service"] is defined'
+    - 'ansible_facts.services["firewalld.service"].state == "running"'
