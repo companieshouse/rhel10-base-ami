@@ -4,7 +4,7 @@ variable "ami_account_ids" {
 }
 
 variable "ami_name_prefix" {
-  default     = "unnamed"
+  default     = "rhel10-base"
   description = "The prefix string that will be used for the name tags of the resulting AMI and snapshot(s); the version string will be appended automatically"
   type        = string
 }
@@ -22,7 +22,7 @@ variable "aws_region" {
 }
 
 variable "aws_source_ami_filter_name" {
-  default     = "amzn2-base-*"
+  default     = "RHEL-10*"
   description = "The source AMI filter string. Any filter described by the DescribeImages API documentation is valid. If multiple images match then the latest will be used"
   type        = string
 }

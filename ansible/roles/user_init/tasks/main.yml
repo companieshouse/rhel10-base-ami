@@ -1,0 +1,44 @@
+---
+## User Initialization Files Must Be Group-Owned By The Primary Group
+- name:
+    Ensure interactive local users are the group-owners of their respective initialization
+    files
+  ansible.builtin.command:
+    cmd:
+      awk -F':' '{ if ($3 >= 1000 && $3 != 65534) system("chgrp -f " $4" "$6"/.[^\.]?*")
+      }' /etc/passwd
+
+## Ensure All User Initialization Files Have Mode 0740 Or Less Permissive
+- name: XCCDF Value var_user_initialization_files_regex # promote to variable
+  set_fact:
+    var_user_initialization_files_regex: !!str ^\.[\w\- ]+$
+
+- name:
+    Ensure All User Initialization Files Have Mode 0740 Or Less Permissive - Gather
+    User Info
+  ansible.builtin.getent:
+    database: passwd
+
+- name:
+    Ensure All User Initialization Files Have Mode 0740 Or Less Permissive - Find
+    Init Files
+  ansible.builtin.find:
+    paths: "{{ item.value[4] }}"
+    pattern: "{{ var_user_initialization_files_regex }}"
+    hidden: true
+    use_regex: true
+  with_dict: "{{ ansible_facts.getent_passwd }}"
+  when:
+    - item.value[4] != "/sbin/nologin"
+    - item.key not in ["nobody", "nfsnobody"]
+    - item.value[1] | int >= 1000
+  register: found_init_files
+
+- name:
+    Ensure All User Initialization Files Have Mode 0740 Or Less Permissive - Fix
+    Init Files Permissions
+  ansible.builtin.file:
+    path: "{{ item.1.path }}"
+    mode: u-s,g-wxs,o=
+  loop: "{{ q('ansible.builtin.subelements', found_init_files.results, 'files',
+    {'skip_missing': True}) }}"

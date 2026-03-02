@@ -1,1 +1,208 @@
 ---
+- hosts: rhel10-base
+  become: true
+  collections:
+    - ch_collections.base
+  pre_tasks:
+    - name: Updating System Packages Before Ansible Run
+      package:
+        name: "*"
+        state: latest
+    - name: CodeReady repo check
+      block:
+        - name: Check CodeReady repo exists but disabled
+          ansible.builtin.stat:
+            path: /etc/yum.repos.d/redhat-rhui.repo.disabled
+          register: repo_disabled
+        - name: Move redhat-rhui repo file to enabled
+          ansible.builtin.copy:
+            src: /etc/yum.repos.d/redhat-rhui.repo.disabled
+            dest: /etc/yum.repos.d/redhat-rhui.repo
+            remote_src: yes
+          when: repo_disabled.stat.exists
+        - name: show contents of repo folder
+          find:
+            paths: /etc/yum.repos.d/
+        - name: Check CodeReady repo exists and enabled
+          ansible.builtin.stat:
+            path: /etc/yum.repos.d/redhat-rhui.repo
+          register: repo_exists
+        - name: Enable CodeReady repo on RHEL9
+          ini_file:
+            dest: /etc/yum.repos.d/redhat-rhui.repo
+            section: codeready-builder-for-rhel-9-rhui-rpms
+            option: enabled
+            value: "1"
+          when: repo_exists.stat.exists
+      when: (ansible_os_family == 'RedHat') and (ansible_distribution_major_version | int == 10)
+
+    - name: Set timezone to Europe/London
+      community.general.timezone:
+        name: Europe/London
+
+    - name: Install Amazon SSM agent
+      ansible.builtin.command: dnf install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm --nogpgcheck
+    - name: Enable Amazon SSM agent
+      ansible.builtin.command: systemctl enable amazon-ssm-agent
+    - name: Enable Amazon SSM agent
+      ansible.builtin.command: systemctl start amazon-ssm-agent
+
+    - name: Set root password.
+      shell: openssl rand -base64 200 | tr -d '\n' | passwd --stdin root
+
+  roles:
+    - geerlingguy.repo-epel
+    - geerlingguy.clamav
+    - ch_collections.base.os_package_control
+    - ch_collections.base.pip
+    - RHEL9-CIS
+    - cloudwatch-agent
+    - ch_collections.base.cloudwatch_agent_helper
+    - ch_collections.base.cron_control
+    - ch_collections.security_banner.banner
+    - crypto_policy
+    - disable_mounting
+    - journald
+    - password_policy
+    - ptrace
+    - session_timeout
+    - ssh_hardening
+    - umask
+    - user_init
+    - verify_audit_tools
+    - pam
+    - network_security
+    - aws-cli
+
+  tasks:
+    - name: update iscsi config setting
+      lineinfile:
+        path: /etc/iscsi/iscsid.conf
+        regexp: "^node.session.timeo.replacement_timeout = 120"
+        line: "node.session.timeo.replacement_timeout = 5"
+        backrefs: yes
+
+    - name: Run multipath config tool to enable multipath and disable user friendly names
+      command: mpathconf --enable --with_multipathd y --user_friendly_names n
+      args:
+        creates: /etc/multipath.conf
+
+    - name: Make sure aws ssm agent is enabled
+      service:
+        name: amazon-ssm-agent
+        state: stopped
+        enabled: yes
+
+    - name: service chronyd
+      service:
+        name: chronyd
+        state: started
+        enabled: yes
+
+    - name: Configure auditd service
+      ansible.builtin.lineinfile:
+        path: "/etc/audit/auditd.conf"
+        regexp: '^{{ item.key }}\s*=.*$'
+        line: "{{ item.key }} = {{ item.value }}"
+      with_dict:
+        - max_log_file: 50
+        - max_log_file_action: rotate
+        - space_left_action: email
+        - action_mail_acct: root
+        - admin_space_left_action: rotate
+        - log_format: "ENRICHED"
+
+    - name: Configure grub commandline options
+      ansible.builtin.lineinfile:
+        path: "/etc/default/grub"
+        regexp: '^(GRUB_CMDLINE_LINUX=(?:(?![" ]{{ item.key | regex_escape }}=).)*)(?:[" ]{{ item.key | regex_escape }}=\S+)?(.*")$'
+        line: '\1 {{ item.key | regex_escape }}={{ item.value | regex_escape }}\2'
+        backrefs: yes
+      with_dict:
+        - audit: 1
+
+    - name: Restrict Kernel log access
+      block:
+        - name: Copy kernel hardening file
+          ansible.builtin.copy:
+            src: 10-kernel-hardening.conf
+            dest: /etc/sysctl.d/10-kernel-hardening.conf
+            owner: root
+            group: root
+            mode: "0600"
+
+    - name: Update Kernel Parameters
+      command: sysctl -p
+
+    ### Level 1 CIS Scan ###
+    - name: Level 1 CIS - Set datetime variable
+      set_fact:
+        datetime: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
+
+    - name: Level 1 CIS - Scan
+      command: >
+        oscap xccdf eval
+        --profile xccdf_org.ssgproject.content_profile_cis_server_l1
+        --results ~/OpenScap_Results_{{ datetime }}.xml
+        /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
+      register: oscap_scan
+      failed_when: oscap_scan.rc == 1
+
+    - name: Level 1 CIS - Generate Report
+      command: >
+        oscap xccdf generate report
+        --output ~/OpenScap_Report_{{ datetime }}.html
+        ~/OpenScap_Results_{{ datetime }}.xml
+      when: oscap_scan is succeeded
+      register: oscap_report
+
+    - name: Level 1 CIS - Extract Score
+      shell: >
+        sed -n 's/.*<score[^>]*>\([0-9]\+\.[0-9]\+\)<\/score>.*/\1/p' ~/OpenScap_Results_{{ datetime }}.xml
+        | xargs printf "%.2f\n"
+      when: oscap_report is succeeded
+      register: cis_compliance_score
+
+    - name: Level 1 CIS - Display Score and Report Location
+      debug:
+        msg:
+          - "Level 1 CIS Compliance Score: {{ cis_compliance_score.stdout }}%"
+          - "Full report: lynx ~/OpenScap_Report_{{ datetime }}.html"
+
+    - name: Clone git rep
+      ansible.builtin.git:
+        repo: "https://github.com/CISOfy/lynis.git"
+        dest: $HOME/lynis
+        clone: true
+
+    - name: confirm lynis folder
+      find:
+        paths: $HOME
+        patterns: "lynis*"
+        recurse: true
+        file_type: directory
+      register: found_directories
+
+    - debug:
+        msg: "{{ [item.path] }}"
+      with_items: "{{ found_directories.files }}"
+
+    - name: Run scan and output to file
+      shell: ./lynis audit system > "$(hostname -s)_$(date +%d-%m-%Y).report"
+      args:
+        chdir: $HOME/lynis
+
+    - name: Print out report
+      shell: cat "$(hostname -s)_$(date +%d-%m-%Y).report"
+      args:
+        chdir: $HOME/lynis
+      register: lynis_report
+
+    - debug:
+        msg: "{{ [item] }} "
+      with_items: "{{ lynis_report.stdout }}"
+
+    - name: Remove lynis folder
+      file:
+        path: $HOME/lynis
+        state: absent
