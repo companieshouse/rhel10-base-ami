@@ -30,6 +30,7 @@ variable "aws_source_ami_filter_name" {
 variable "aws_source_ami_owner_id" {
   description = "The source AMI owner ID; used in combination with aws_source_ami_filter_name to filter for matching source AMIs"
   type        = string
+  default     = "309956199498"
 }
 
 variable "aws_subnet_filter_name" {
@@ -52,6 +53,7 @@ variable "data_volume_iops" {
 variable "data_volume_size_gib" {
   description = "The EC2 instance data volume size in Gibibytes (GiB)"
   type        = number
+  default     = 20
 }
 
 variable "data_volume_throughput" {
