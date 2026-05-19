@@ -16,7 +16,7 @@ roles:
   
   - src: https://github.com/ansible-lockdown/RHEL10-CIS.git
     name: RHEL10-CIS
-    version: 0.9.2
+    version: 1.0.2
   
   - src: https://github.com/christiangda/ansible-role-amazon-cloudwatch-agent.git
     name: cloudwatch-agent
