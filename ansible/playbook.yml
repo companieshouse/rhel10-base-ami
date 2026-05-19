@@ -55,7 +55,7 @@
     - geerlingguy.clamav
     - ch_collections.base.os_package_control
     - ch_collections.base.pip
-    - RHEL9-CIS
+    - RHEL10-CIS
     - cloudwatch-agent
     - ch_collections.base.cloudwatch_agent_helper
     - ch_collections.base.cron_control
