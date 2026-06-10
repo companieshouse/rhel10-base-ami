@@ -71,7 +71,7 @@ rhel10cis_rule_4_4_1_6: false
 rhel10cis_rule_4_4_1_7: false
 
 #Disable rsyslog/syslog-ng, using cloudwatch
-rhel10cis_rule_6_2_1: false
+rhel10cis_rule_6_2_1_3: false
 rhel10cis_rule_6_2_3_1: false
 rhel10cis_rule_6_2_3_2: false
 rhel10cis_rule_6_2_3_3: false
