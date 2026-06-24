@@ -60,6 +60,12 @@ variable "data_volume_throughput" {
   type        = number
 }
 
+variable "build_date" {
+  default     = ""
+  description = "ISO 8601 UTC (human-readable) timestamp of the build; surfaced as the AMI's BuildDate tag"
+  type        = string
+}
+
 variable "force_delete_snapshot" {
   default     = false
   description = "Delete snapshots associated with AMIs, which have been deregistered by force_deregister"
