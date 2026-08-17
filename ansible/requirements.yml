@@ -9,10 +9,11 @@ collections:
     version: 1.5.4
   - name: https://github.com/companieshouse/ansible-collections.git#ch_collections/security_banner
     type: git
+  - name: companieshouse.security
+    version: 1.0.21
 
 roles:
   - name: geerlingguy.repo-epel
-  - name: geerlingguy.clamav
   
   - src: https://github.com/ansible-lockdown/RHEL10-CIS.git
     name: RHEL10-CIS
