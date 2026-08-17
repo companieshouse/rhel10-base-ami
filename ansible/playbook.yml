@@ -52,7 +52,7 @@
 
   roles:
     - geerlingguy.repo-epel
-    - geerlingguy.clamav
+    - companieshouse.security.clamav_ng
     - ch_collections.base.os_package_control
     - ch_collections.base.pip
     - RHEL10-CIS

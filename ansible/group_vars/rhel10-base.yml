@@ -46,8 +46,6 @@ pip_install_packages:
   - name: selinux
     umask: "0022"
 
-#clamav_mirror: http://clamav-mirror.sharedservices.aws.internal
-
 ## CloudWatch Agent Variables
 cwa_conf_json_file_content: "{{ lookup('file', 'files/cloudwatch-config.json') }}"
 
@@ -90,3 +88,6 @@ rhel10cis_host_allow:
   - "10.0.0.0/255.0.0.0"
   - "172.16.0.0/255.240.0.0"
   - "192.168.0.0/255.255.0.0"
+
+## clamav_ng Variables
+clamav_ng_freshclam_privatemirror: clamav-mirror.companieshouse.gov.uk
