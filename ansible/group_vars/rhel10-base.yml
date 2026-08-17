@@ -91,3 +91,4 @@ rhel10cis_host_allow:
 
 ## clamav_ng Variables
 clamav_ng_freshclam_privatemirror: clamav-mirror.companieshouse.gov.uk
+clamav_ng_run_directory: /run/clamd.scan
