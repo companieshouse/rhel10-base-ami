@@ -21,6 +21,12 @@ variable "aws_region" {
   type        = string
 }
 
+variable "ansible_host_alias" {
+  type        = string
+  default     = "rhel10-base"
+  description = "The Ansible host alias"
+}
+
 variable "aws_source_ami_filter_name" {
   default     = "RHEL-10.0.0_HVM-*-x86_64-*"
   description = "The source AMI filter string. Any filter described by the DescribeImages API documentation is valid. If multiple images match then the latest will be used"
@@ -39,9 +45,10 @@ variable "aws_subnet_filter_name" {
 }
 
 variable "configuration_group" {
-  default     = "unnamed"
-  description = "The name of the group to which to add the instance for configuration purposes"
   type        = string
+  default     = "rhel10-base"
+  description = "The name of the group to which to add the instance for configuration purposes"
+  
 }
 
 variable "data_volume_iops" {
