@@ -52,6 +52,9 @@ cwa_conf_json_file_content: "{{ lookup('file', 'files/cloudwatch-config.json') }
 rhel10cis_time_synchronization: chrony
 rhel10cis_time_synchronization_servers: ["169.254.169.123"] #Default VPC source
 
+# Disable authselect discoveries
+rhel10cis_allow_authselect_updates: false
+
 #Disable crypto setting changes as it causes DNF to fail installs
 rhel10cis_rule_1_6: false
 
