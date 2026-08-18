@@ -61,6 +61,9 @@ rhel10cis_rule_1_6: false
 #Disable GRUB tasks
 rhel10cis_rule_1_4_2: false
 
+#Disable chrony config
+rhel10cis_rule_2_3_2: false
+
 #Disable Firewall Tasks, we manage this in app deploy
 rhel10cis_rule_4_4_1_1: false
 rhel10cis_rule_4_4_1_2: false
