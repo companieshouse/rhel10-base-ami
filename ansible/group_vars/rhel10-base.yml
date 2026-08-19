@@ -65,17 +65,15 @@ rhel10cis_rule_1_4_2: false
 rhel10cis_rule_2_3_2: false
 
 #Disable Firewall Tasks, we manage this in app deploy
-rhel10cis_rule_4_1: false
-# rhel10cis_rule_4_4_1_1: false
-# rhel10cis_rule_4_4_1_2: false
-# rhel10cis_rule_4_4_1_3: false
-# rhel10cis_rule_4_4_1_4: false
-# rhel10cis_rule_4_4_1_5: false
-# rhel10cis_rule_4_4_1_6: false
-# rhel10cis_rule_4_4_1_7: false
+rhel10cis_rule_4_1_1: false
+rhel10cis_rule_4_1_2: false
+rhel10cis_rule_4_1_3: false
+rhel10cis_rule_4_1_4: false
+rhel10cis_rule_4_1_5: false
+rhel10cis_rule_4_1_6: false
+rhel10cis_rule_4_1_7: false
 
 #Disable rsyslog/syslog-ng, using cloudwatch
-rhel10cis_rule_6_2_1_3: false
 rhel10cis_rule_6_2_3_1: false
 rhel10cis_rule_6_2_3_2: false
 rhel10cis_rule_6_2_3_3: false
@@ -98,3 +96,6 @@ rhel10cis_host_allow:
 ## clamav_ng Variables
 clamav_ng_freshclam_privatemirror: clamav-mirror.companieshouse.gov.uk
 clamav_ng_run_directory: /run/clamd.scan
+
+cwa_package_url: https://s3.amazonaws.com/amazoncloudwatch-agent/redhat/{{ cwa_arch_name }}/latest/amazon-cloudwatch-agent.rpm
+cwa_package_signature: https://s3.amazonaws.com/amazoncloudwatch-agent/redhat/{{ cwa_arch_name }}/latest/amazon-cloudwatch-agent.rpm.sig
