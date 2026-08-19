@@ -11,10 +11,10 @@
     - name: Distribution major version
       debug: msg="{{ ansible_distribution_major_version }}"
       
-    - name: Updating System Packages Before Ansible Run
-      package:
-        name: "*"
-        state: latest
+    # - name: Updating System Packages Before Ansible Run
+    #   package:
+    #     name: "*"
+    #     state: latest
     - name: CodeReady repo check
       block:
         - name: Check CodeReady repo exists but disabled
@@ -58,11 +58,11 @@
       shell: openssl rand -base64 200 | tr -d '\n' | passwd --stdin root
 
   roles:
-    - geerlingguy.repo-epel
-    - ch_collections.base.os_package_control
-    - ch_collections.base.pip
-    - RHEL10-CIS
-    - companieshouse.security.clamav_ng
+    # - geerlingguy.repo-epel
+    # - ch_collections.base.os_package_control
+    # - ch_collections.base.pip
+    # - RHEL10-CIS
+    # - companieshouse.security.clamav_ng
     - cloudwatch-agent
     - ch_collections.base.cloudwatch_agent_helper
     - ch_collections.base.cron_control

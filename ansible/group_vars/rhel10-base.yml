@@ -97,5 +97,7 @@ rhel10cis_host_allow:
 clamav_ng_freshclam_privatemirror: clamav-mirror.companieshouse.gov.uk
 clamav_ng_run_directory: /run/clamd.scan
 
+# christiangda's ansible-role-amazon-cloudwatch-agent vars (no rhel 10 vars in external repo)
+cwa_package_gpg_id: 3B789C72
 cwa_package_url: https://s3.amazonaws.com/amazoncloudwatch-agent/redhat/{{ cwa_arch_name }}/latest/amazon-cloudwatch-agent.rpm
 cwa_package_signature: https://s3.amazonaws.com/amazoncloudwatch-agent/redhat/{{ cwa_arch_name }}/latest/amazon-cloudwatch-agent.rpm.sig
