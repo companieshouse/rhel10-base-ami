@@ -8,7 +8,8 @@ build {
     playbook_file = "${var.playbook_file_path}"
     use_proxy     = false
     extra_arguments = [
-      "-e", "aws_region=${var.aws_region}"
+      "-e", "aws_region=${var.aws_region}",
+      "--skip-tags", "add-key"
     ]
     ansible_env_vars = [
       "ANSIBLE_FORCE_COLOR=true",
