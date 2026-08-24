@@ -5,6 +5,7 @@ additional_packages:
   - audit
   - audit-libs
   - chrony
+  - collectd
   - device-mapper-multipath
   - findutils
   - git

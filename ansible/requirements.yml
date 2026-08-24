@@ -19,8 +19,8 @@ roles:
     name: RHEL10-CIS
     version: 1.0.2
   
-  - src: https://github.com/christiangda/ansible-role-amazon-cloudwatch-agent.git
-    name: cloudwatch-agent
+  # - src: https://github.com/christiangda/ansible-role-amazon-cloudwatch-agent.git
+  #   name: cloudwatch-agent
   
   - src: https://github.com/companieshouse/ansible-role-aws-cli
     name: aws-cli

@@ -58,13 +58,13 @@
       shell: openssl rand -base64 200 | tr -d '\n' | passwd --stdin root
 
   roles:
-    # - geerlingguy.repo-epel
-    # - ch_collections.base.os_package_control
-    # - ch_collections.base.pip
-    # - RHEL10-CIS
-    # - companieshouse.security.clamav_ng
-    - cloudwatch-agent
-    - ch_collections.base.cloudwatch_agent_helper
+    - geerlingguy.repo-epel
+    - ch_collections.base.os_package_control
+    - ch_collections.base.pip
+    - RHEL10-CIS
+    - companieshouse.security.clamav_ng
+    # - cloudwatch-agent
+    # - ch_collections.base.cloudwatch_agent_helper
     - ch_collections.base.cron_control
     - ch_collections.security_banner.banner
     - crypto_policy
