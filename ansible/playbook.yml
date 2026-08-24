@@ -4,10 +4,17 @@
   collections:
     - ch_collections.base
   pre_tasks:
-    - name: Updating System Packages Before Ansible Run
-      package:
-        name: "*"
-        state: latest
+    - name: Distribution
+      debug: msg="{{ ansible_distribution }}"
+    - name: Distribution version
+      debug: msg="{{ ansible_distribution_version}}"
+    - name: Distribution major version
+      debug: msg="{{ ansible_distribution_major_version }}"
+      
+    # - name: Updating System Packages Before Ansible Run
+    #   package:
+    #     name: "*"
+    #     state: latest
     - name: CodeReady repo check
       block:
         - name: Check CodeReady repo exists but disabled
@@ -27,10 +34,10 @@
           ansible.builtin.stat:
             path: /etc/yum.repos.d/redhat-rhui.repo
           register: repo_exists
-        - name: Enable CodeReady repo on RHEL9
+        - name: Enable CodeReady repo on RHEL10
           ini_file:
             dest: /etc/yum.repos.d/redhat-rhui.repo
-            section: codeready-builder-for-rhel-9-rhui-rpms
+            section: codeready-builder-for-rhel-10-rhui-rpms
             option: enabled
             value: "1"
           when: repo_exists.stat.exists
@@ -52,12 +59,12 @@
 
   roles:
     - geerlingguy.repo-epel
-    - geerlingguy.clamav
     - ch_collections.base.os_package_control
     - ch_collections.base.pip
-    - RHEL9-CIS
-    - cloudwatch-agent
-    - ch_collections.base.cloudwatch_agent_helper
+    - RHEL10-CIS
+    - companieshouse.security.clamav_ng
+    # - cloudwatch-agent
+    # - ch_collections.base.cloudwatch_agent_helper
     - ch_collections.base.cron_control
     - ch_collections.security_banner.banner
     - crypto_policy
@@ -134,75 +141,75 @@
     - name: Update Kernel Parameters
       command: sysctl -p
 
-    ### Level 1 CIS Scan ###
-    - name: Level 1 CIS - Set datetime variable
-      set_fact:
-        datetime: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
+    # ### Level 1 CIS Scan ###
+    # - name: Level 1 CIS - Set datetime variable
+    #   set_fact:
+    #     datetime: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
 
-    - name: Level 1 CIS - Scan
-      command: >
-        oscap xccdf eval
-        --profile xccdf_org.ssgproject.content_profile_cis_server_l1
-        --results ~/OpenScap_Results_{{ datetime }}.xml
-        /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
-      register: oscap_scan
-      failed_when: oscap_scan.rc == 1
+    # - name: Level 1 CIS - Scan
+    #   command: >
+    #     oscap xccdf eval
+    #     --profile xccdf_org.ssgproject.content_profile_cis_server_l1
+    #     --results ~/OpenScap_Results_{{ datetime }}.xml
+    #     /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
+    #   register: oscap_scan
+    #   failed_when: oscap_scan.rc == 1
 
-    - name: Level 1 CIS - Generate Report
-      command: >
-        oscap xccdf generate report
-        --output ~/OpenScap_Report_{{ datetime }}.html
-        ~/OpenScap_Results_{{ datetime }}.xml
-      when: oscap_scan is succeeded
-      register: oscap_report
+    # - name: Level 1 CIS - Generate Report
+    #   command: >
+    #     oscap xccdf generate report
+    #     --output ~/OpenScap_Report_{{ datetime }}.html
+    #     ~/OpenScap_Results_{{ datetime }}.xml
+    #   when: oscap_scan is succeeded
+    #   register: oscap_report
 
-    - name: Level 1 CIS - Extract Score
-      shell: >
-        sed -n 's/.*<score[^>]*>\([0-9]\+\.[0-9]\+\)<\/score>.*/\1/p' ~/OpenScap_Results_{{ datetime }}.xml
-        | xargs printf "%.2f\n"
-      when: oscap_report is succeeded
-      register: cis_compliance_score
+    # - name: Level 1 CIS - Extract Score
+    #   shell: >
+    #     sed -n 's/.*<score[^>]*>\([0-9]\+\.[0-9]\+\)<\/score>.*/\1/p' ~/OpenScap_Results_{{ datetime }}.xml
+    #     | xargs printf "%.2f\n"
+    #   when: oscap_report is succeeded
+    #   register: cis_compliance_score
 
-    - name: Level 1 CIS - Display Score and Report Location
-      debug:
-        msg:
-          - "Level 1 CIS Compliance Score: {{ cis_compliance_score.stdout }}%"
-          - "Full report: lynx ~/OpenScap_Report_{{ datetime }}.html"
+    # - name: Level 1 CIS - Display Score and Report Location
+    #   debug:
+    #     msg:
+    #       - "Level 1 CIS Compliance Score: {{ cis_compliance_score.stdout }}%"
+    #       - "Full report: lynx ~/OpenScap_Report_{{ datetime }}.html"
 
-    - name: Clone git rep
-      ansible.builtin.git:
-        repo: "https://github.com/CISOfy/lynis.git"
-        dest: $HOME/lynis
-        clone: true
+    # - name: Clone git rep
+    #   ansible.builtin.git:
+    #     repo: "https://github.com/CISOfy/lynis.git"
+    #     dest: $HOME/lynis
+    #     clone: true
 
-    - name: confirm lynis folder
-      find:
-        paths: $HOME
-        patterns: "lynis*"
-        recurse: true
-        file_type: directory
-      register: found_directories
+    # - name: confirm lynis folder
+    #   find:
+    #     paths: $HOME
+    #     patterns: "lynis*"
+    #     recurse: true
+    #     file_type: directory
+    #   register: found_directories
 
-    - debug:
-        msg: "{{ [item.path] }}"
-      with_items: "{{ found_directories.files }}"
+    # - debug:
+    #     msg: "{{ [item.path] }}"
+    #   with_items: "{{ found_directories.files }}"
 
-    - name: Run scan and output to file
-      shell: ./lynis audit system > "$(hostname -s)_$(date +%d-%m-%Y).report"
-      args:
-        chdir: $HOME/lynis
+    # - name: Run scan and output to file
+    #   shell: ./lynis audit system > "$(hostname -s)_$(date +%d-%m-%Y).report"
+    #   args:
+    #     chdir: $HOME/lynis
 
-    - name: Print out report
-      shell: cat "$(hostname -s)_$(date +%d-%m-%Y).report"
-      args:
-        chdir: $HOME/lynis
-      register: lynis_report
+    # - name: Print out report
+    #   shell: cat "$(hostname -s)_$(date +%d-%m-%Y).report"
+    #   args:
+    #     chdir: $HOME/lynis
+    #   register: lynis_report
 
-    - debug:
-        msg: "{{ [item] }} "
-      with_items: "{{ lynis_report.stdout }}"
+    # - debug:
+    #     msg: "{{ [item] }} "
+    #   with_items: "{{ lynis_report.stdout }}"
 
-    - name: Remove lynis folder
-      file:
-        path: $HOME/lynis
-        state: absent
+    # - name: Remove lynis folder
+    #   file:
+    #     path: $HOME/lynis
+    #     state: absent

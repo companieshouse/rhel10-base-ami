@@ -1,7 +1,7 @@
 ---
 collections:
   - name: https://github.com/companieshouse/ansible-collections.git#ch_collections/base
-    version: 0.1.144
+    version: 0.1.148
     type: git
   - name: community.general
     version: 4.8.0
@@ -9,17 +9,18 @@ collections:
     version: 1.5.4
   - name: https://github.com/companieshouse/ansible-collections.git#ch_collections/security_banner
     type: git
+  - name: companieshouse.security
+    version: 1.0.21
 
 roles:
   - name: geerlingguy.repo-epel
-  - name: geerlingguy.clamav
   
   - src: https://github.com/ansible-lockdown/RHEL10-CIS.git
     name: RHEL10-CIS
-    version: 0.9.2
+    version: 1.0.2
   
-  - src: https://github.com/christiangda/ansible-role-amazon-cloudwatch-agent.git
-    name: cloudwatch-agent
+  # - src: https://github.com/christiangda/ansible-role-amazon-cloudwatch-agent.git
+  #   name: cloudwatch-agent
   
   - src: https://github.com/companieshouse/ansible-role-aws-cli
     name: aws-cli

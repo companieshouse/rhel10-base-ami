@@ -1,34 +1,35 @@
 ---
 ## Add any additional packages
 additional_packages:
-  - nfs-utils
-  - iscsi-initiator-utils
-  - device-mapper-multipath
-  - sg3_utils
-  - git
-  - screen
-  - logrotate
-  - lvm2
-  - python3
-  - python3-pip
-  - python3-libselinux
-  - python3-libsemanage
-  - python3-policycoreutils
-  - python39
-  - chrony
+  - audispd-plugins
   - audit
   - audit-libs
-  - audispd-plugins
-  - rsyslog
-  - openscap-scanner
-  - scap-security-guide
-  - lynx
+  - chrony
+  - collectd
+  - device-mapper-multipath
   - findutils
-  - procps
-  - passwd
+  - git
   - hostname
-  - systemd-journal-remote
+  - iscsi-initiator-utils
+  - logrotate
+  - lvm2
+  - lynx
+  - nfs-utils
+  - nmap-ncat
+  - openscap-scanner
+  - passwd
+  - procps
+  - python3
+  - python3-libselinux
+  - python3-libsemanage
+  - python3-pip
+  - python3-policycoreutils
+  - rsyslog
+  - scap-security-guide
+  - screen
+  - sg3_utils
   - sysstat
+  - systemd-journal-remote
   - unzip
   - wget
 
@@ -45,43 +46,59 @@ pip_install_packages:
   - name: selinux
     umask: "0022"
 
-#clamav_mirror: http://clamav-mirror.sharedservices.aws.internal
-
 ## CloudWatch Agent Variables
 cwa_conf_json_file_content: "{{ lookup('file', 'files/cloudwatch-config.json') }}"
 
 ## CIS Hardening Variables
-rhel9cis_time_synchronization: chrony
-rhel9cis_time_synchronization_servers: ["169.254.169.123"] #Default VPC source
+rhel10cis_time_synchronization: chrony
+rhel10cis_time_synchronization_servers: ["169.254.169.123"] #Default VPC source
+
+# Disable authselect discoveries
+rhel10cis_allow_authselect_updates: false
 
 #Disable crypto setting changes as it causes DNF to fail installs
-rhel9cis_rule_1_10: false
+rhel10cis_rule_1_6: false
 
 #Disable GRUB tasks
-rhel9cis_rule_1_4_2: false
+rhel10cis_rule_1_4_2: false
+
+#Disable chrony config
+rhel10cis_rule_2_3_2: false
 
 #Disable Firewall Tasks, we manage this in app deploy
-rhel9cis_rule_3_4_1_1: false
-rhel9cis_rule_3_4_1_2: false
-rhel9cis_rule_3_4_2_1: false
-rhel9cis_rule_3_4_2_4: false
-rhel9cis_rule_3_4_2_5: false
+rhel10cis_rule_4_1_1: false
+rhel10cis_rule_4_1_2: false
+rhel10cis_rule_4_1_3: false
+rhel10cis_rule_4_1_4: false
+rhel10cis_rule_4_1_5: false
+rhel10cis_rule_4_1_6: false
+rhel10cis_rule_4_1_7: false
 
 #Disable rsyslog/syslog-ng, using cloudwatch
-rhel9cis_rule_4_2_1_1: false
-rhel9cis_rule_4_2_1_2: false
-rhel9cis_rule_4_2_1_3: false
-rhel9cis_rule_4_2_1_4: false
-rhel9cis_rule_4_2_1_5: false
-rhel9cis_rule_4_2_1_6: false
-rhel9cis_rule_4_2_1_7: false
+rhel10cis_rule_6_2_3_1: false
+rhel10cis_rule_6_2_3_2: false
+rhel10cis_rule_6_2_3_3: false
+rhel10cis_rule_6_2_3_4: false
+rhel10cis_rule_6_2_3_5: false
+rhel10cis_rule_6_2_3_6: false
+rhel10cis_rule_6_2_3_7: false
+rhel10cis_rule_6_2_3_8: false
 
 #Allow no password set for EC2 user
-rhel9cis_rule_5_3_4: false
+rhel10cis_rule_7_2_: false
 
 # Setup hosts.allow entries
-rhel9cis_host_allow:
+rhel10cis_host_allow:
   - "127.0.0.1"
   - "10.0.0.0/255.0.0.0"
   - "172.16.0.0/255.240.0.0"
   - "192.168.0.0/255.255.0.0"
+
+## clamav_ng Variables
+clamav_ng_freshclam_privatemirror: clamav-mirror.companieshouse.gov.uk
+clamav_ng_run_directory: /run/clamd.scan
+
+# christiangda's ansible-role-amazon-cloudwatch-agent vars (no rhel 10 vars in external repo)
+cwa_package_gpg_id: 3B789C72
+cwa_package_url: https://s3.amazonaws.com/amazoncloudwatch-agent/redhat/{{ cwa_arch_name }}/latest/amazon-cloudwatch-agent.rpm
+cwa_package_signature: https://s3.amazonaws.com/amazoncloudwatch-agent/redhat/{{ cwa_arch_name }}/latest/amazon-cloudwatch-agent.rpm.sig
