@@ -4,7 +4,7 @@ collections:
     version: 0.1.148
     type: git
   - name: community.general
-    version: 4.8.0
+    version: 8.0.0
   - name: ansible.posix
     version: 1.5.4
   - name: https://github.com/companieshouse/ansible-collections.git#ch_collections/security_banner
