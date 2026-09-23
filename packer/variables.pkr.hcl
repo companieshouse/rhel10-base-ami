@@ -93,6 +93,12 @@ variable "playbook_file_path" {
   type        = string
 }
 
+variable "security_playbook_file_path" {
+  default     = "../ansible/security.yml"
+  description = "The relative path to the post-reboot security Ansible playbook file"
+  type        = string
+}
+
 variable "root_volume_iops" {
   default     = 3000
   description = "The baseline IOPS for the root EBS volume; 3000 is the gp3 default"
@@ -133,3 +139,4 @@ variable "version" {
   type        = string
   description = "The semantic version number for the AMI; the version string will be appended automatically to the name tags added to the resulting AMI and snapshot(s)"
 }
+

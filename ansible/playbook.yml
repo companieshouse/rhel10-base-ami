@@ -11,10 +11,6 @@
     - name: Distribution major version
       debug: msg="{{ ansible_distribution_major_version }}"
       
-    # - name: Updating System Packages Before Ansible Run
-    #   package:
-    #     name: "*"
-    #     state: latest
     - name: CodeReady repo check
       block:
         - name: Check CodeReady repo exists but disabled
@@ -79,4 +75,3 @@
     - network_security
     - aws-cli
     - post_build_fixes
-    - companieshouse.security.security_scans
