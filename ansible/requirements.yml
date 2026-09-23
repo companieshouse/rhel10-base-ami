@@ -11,6 +11,8 @@ collections:
     type: git
   - name: companieshouse.security
     version: 1.0.21
+  - name: companieshouse.infrastructure
+    version: 1.0.9
 
 roles:
   - name: geerlingguy.repo-epel

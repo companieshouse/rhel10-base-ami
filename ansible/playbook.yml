@@ -65,21 +65,22 @@
     - companieshouse.security.clamav_ng
     # - cloudwatch-agent
     # - ch_collections.base.cloudwatch_agent_helper
-    - ch_collections.base.cron_control
-    - ch_collections.security_banner.banner
-    - crypto_policy
-    - disable_mounting
-    - journald
-    - password_policy
-    - ptrace
-    - session_timeout
-    - ssh_hardening
-    - umask
-    - user_init
-    - verify_audit_tools
-    - pam
-    - network_security
-    - aws-cli
+    - ch_collections.infrastructure.linux_cloudwatch_agent_config
+    # - ch_collections.base.cron_control
+    # - ch_collections.security_banner.banner
+    # - crypto_policy
+    # - disable_mounting
+    # - journald
+    # - password_policy
+    # - ptrace
+    # - session_timeout
+    # - ssh_hardening
+    # - umask
+    # - user_init
+    # - verify_audit_tools
+    # - pam
+    # - network_security
+    # - aws-cli
 
   tasks:
     - name: update iscsi config setting

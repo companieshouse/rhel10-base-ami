@@ -28,7 +28,7 @@ variable "ansible_host_alias" {
 }
 
 variable "aws_source_ami_filter_name" {
-  default     = "RHEL-10.0.0_HVM-*-x86_64-*"
+  default     = "RHEL-10.2.*_HVM-*-x86_64-*"
   description = "The source AMI filter string. Any filter described by the DescribeImages API documentation is valid. If multiple images match then the latest will be used"
   type        = string
 }
