@@ -65,7 +65,7 @@
     - companieshouse.security.clamav_ng
     # - cloudwatch-agent
     # - ch_collections.base.cloudwatch_agent_helper
-    - ch_collections.infrastructure.linux_cloudwatch_agent_config
+    - companieshouse.infrastructure.linux_cloudwatch_agent_config
     # - ch_collections.base.cron_control
     # - ch_collections.security_banner.banner
     # - crypto_policy
