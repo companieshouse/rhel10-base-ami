@@ -78,5 +78,5 @@
     - pam
     - network_security
     - aws-cli
-    - post-build-fixes
+    - post_build_fixes
     - companieshouse.security.security_scans
