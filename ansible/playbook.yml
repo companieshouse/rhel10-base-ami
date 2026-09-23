@@ -60,7 +60,7 @@
   roles:
     - geerlingguy.repo-epel
     - ch_collections.base.os_package_control
-    - pip_install
+    #- pip_install
     #- ch_collections.base.pip
     - RHEL10-CIS
     - companieshouse.security.clamav_ng

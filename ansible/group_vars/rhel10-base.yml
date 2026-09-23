@@ -36,7 +36,9 @@ additional_packages:
 ssm_package:
   - https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
 
-pip_install_packages:
+#pip_install_packages:
+
+additonal_packages_pip:
   - name: pip
     state: latest
   - name: ansible
