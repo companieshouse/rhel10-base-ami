@@ -1,0 +1,7 @@
+---
+- name: Install required pip packages
+  ansible.builtin.pip:
+    name:
+      - ansible==2.10.7
+      - j2cli==0.3.10
+      - selinux==3.10

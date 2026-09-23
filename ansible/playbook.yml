@@ -60,7 +60,8 @@
   roles:
     - geerlingguy.repo-epel
     - ch_collections.base.os_package_control
-    - ch_collections.base.pip
+    - pip_install
+    #- ch_collections.base.pip
     - RHEL10-CIS
     - companieshouse.security.clamav_ng
     # - cloudwatch-agent
