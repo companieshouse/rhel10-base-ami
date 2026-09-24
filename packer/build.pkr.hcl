@@ -31,9 +31,18 @@ build {
   provisioner "ansible" {
     pause_before = "1m"
     groups = [ "${var.configuration_group}" ]
-    playbook_file = "${var.playbook_file_path}"
-    extra_arguments  = [
-      "-e", "aws_region=${var.aws_region}"
+    playbook_file = "${var.security_playbook_file_path}"
+    use_proxy     = false
+    extra_arguments = [
+      "-e", "aws_region=${var.aws_region}",
+      "--skip-tags", "add-key"
+    ]
+    ansible_env_vars = [
+      "ANSIBLE_FORCE_COLOR=true",
+      "ANSIBLE_STDOUT_CALLBACK=default",
+      "ANSIBLE_CALLBACK_RESULT_FORMAT=yaml",
+      "ANSIBLE_HOST_KEY_CHECKING=False",
+      "ANSIBLE_PYTHON_INTERPRETER=auto_silent",
     ]
   }
 

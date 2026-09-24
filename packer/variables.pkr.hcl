@@ -10,7 +10,7 @@ variable "ami_name_prefix" {
 }
 
 variable "aws_instance_type" {
-  default     = "t3.small"
+  default     = "t3.medium"
   description = "The EC2 instance type used when building the AMI"
   type        = string
 }
