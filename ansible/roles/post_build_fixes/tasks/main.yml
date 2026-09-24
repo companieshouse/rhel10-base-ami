@@ -1,0 +1,59 @@
+---
+  - name: update iscsi config setting
+    lineinfile:
+      path: /etc/iscsi/iscsid.conf
+      regexp: "^node.session.timeo.replacement_timeout = 120"
+      line: "node.session.timeo.replacement_timeout = 5"
+      backrefs: yes 
+
+  - name: Run multipath config tool to enable multipath and disable user friendly names
+    command: mpathconf --enable --with_multipathd y --user_friendly_names n
+    args:
+      creates: /etc/multipath.conf
+
+  - name: Make sure aws ssm agent is enabled
+    service:
+      name: amazon-ssm-agent
+      state: stopped
+      enabled: yes
+
+  - name: service chronyd
+    service:
+      name: chronyd
+      state: started
+      enabled: yes
+
+  - name: Configure auditd service
+    ansible.builtin.lineinfile:
+      path: "/etc/audit/auditd.conf"
+      regexp: '^{{ item.key }}\s*=.*$'
+      line: "{{ item.key }} = {{ item.value }}"
+    with_dict:
+      - max_log_file: 50
+      - max_log_file_action: rotate
+      - space_left_action: email
+      - action_mail_acct: root
+      - admin_space_left_action: rotate
+      - log_format: "ENRICHED"
+
+  - name: Configure grub commandline options
+    ansible.builtin.lineinfile:
+      path: "/etc/default/grub"
+      regexp: '^(GRUB_CMDLINE_LINUX=(?:(?![" ]{{ item.key | regex_escape }}=).)*)(?:[" ]{{ item.key | regex_escape }}=\S+)?(.*")$'
+      line: '\1 {{ item.key | regex_escape }}={{ item.value | regex_escape }}\2'
+      backrefs: yes
+    with_dict:
+      - audit: 1
+
+  - name: Restrict Kernel log access
+    block:
+      - name: Copy kernel hardening file
+        ansible.builtin.copy:
+          src: 10-kernel-hardening.conf
+          dest: /etc/sysctl.d/10-kernel-hardening.conf
+          owner: root
+          group: root
+          mode: "0600"
+
+  - name: Update Kernel Parameters
+    command: sysctl -p
