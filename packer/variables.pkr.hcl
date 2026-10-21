@@ -10,7 +10,7 @@ variable "ami_name_prefix" {
 }
 
 variable "aws_instance_type" {
-  default     = "t3.small"
+  default     = "t3.medium"
   description = "The EC2 instance type used when building the AMI"
   type        = string
 }
@@ -21,8 +21,14 @@ variable "aws_region" {
   type        = string
 }
 
+variable "ansible_host_alias" {
+  type        = string
+  default     = "rhel10-base"
+  description = "The Ansible host alias"
+}
+
 variable "aws_source_ami_filter_name" {
-  default     = "RHEL-10*"
+  default     = "RHEL-10.2.*_HVM-*-x86_64-*"
   description = "The source AMI filter string. Any filter described by the DescribeImages API documentation is valid. If multiple images match then the latest will be used"
   type        = string
 }
@@ -30,6 +36,7 @@ variable "aws_source_ami_filter_name" {
 variable "aws_source_ami_owner_id" {
   description = "The source AMI owner ID; used in combination with aws_source_ami_filter_name to filter for matching source AMIs"
   type        = string
+  default     = "309956199498"
 }
 
 variable "aws_subnet_filter_name" {
@@ -38,9 +45,10 @@ variable "aws_subnet_filter_name" {
 }
 
 variable "configuration_group" {
-  default     = "unnamed"
-  description = "The name of the group to which to add the instance for configuration purposes"
   type        = string
+  default     = "rhel10-base"
+  description = "The name of the group to which to add the instance for configuration purposes"
+  
 }
 
 variable "data_volume_iops" {
@@ -52,6 +60,7 @@ variable "data_volume_iops" {
 variable "data_volume_size_gib" {
   description = "The EC2 instance data volume size in Gibibytes (GiB)"
   type        = number
+  default     = 20
 }
 
 variable "data_volume_throughput" {
@@ -87,6 +96,12 @@ variable "kms_key_id" {
 variable "playbook_file_path" {
   default     = "../ansible/playbook.yml"
   description = "The relative path to the Ansible playbook file"
+  type        = string
+}
+
+variable "security_playbook_file_path" {
+  default     = "../ansible/security.yml"
+  description = "The relative path to the post-reboot security Ansible playbook file"
   type        = string
 }
 
@@ -130,3 +145,4 @@ variable "version" {
   type        = string
   description = "The semantic version number for the AMI; the version string will be appended automatically to the name tags added to the resulting AMI and snapshot(s)"
 }
+

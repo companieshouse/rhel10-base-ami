@@ -1,0 +1,19 @@
+---
+- hosts: rhel10-base
+  become: true
+
+  pre_tasks:
+    - name: Instance Uptime
+      ansible.builtin.command:
+        cmd: uptime -p
+      register: uptime
+      
+    - name: Instance rebooted
+      ansible.builtin.debug:
+        msg: 
+          - "Instance has rebooted..."
+          - "Instance has been {{ uptime.stdout_lines }}"
+          - "RESUMING ANSIBLE RUN..."
+  
+  roles:
+    - companieshouse.security.security_scans 
